@@ -70,13 +70,20 @@ const ENCOURAGE = [
 /* ================= 本机进度（localStorage，仅演示） ================= */
 const STORE_KEY = "kekecat.demo.progress.v1";
 
-function todayStr() {
-  const d = new Date();
+function fmtDate(d) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
+function todayStr() {
+  return fmtDate(new Date());
+}
+
 function loadProgress() {
-  const empty = { learned: {}, correct: {}, today: { date: todayStr(), learned: 0, correct: 0, sessions: 0 } };
+  const empty = {
+    learned: {}, correct: {},
+    today: { date: todayStr(), learned: 0, correct: 0, sessions: 0 },
+    checkins: [], session: null,
+  };
   try {
     const raw = localStorage.getItem(STORE_KEY);
     if (!raw) return empty;
@@ -85,7 +92,11 @@ function loadProgress() {
     if (!p.today || p.today.date !== todayStr()) {
       p.today = { date: todayStr(), learned: 0, correct: 0, sessions: 0 };
     }
-    return { learned: p.learned || {}, correct: p.correct || {}, today: p.today };
+    if (!Array.isArray(p.checkins)) p.checkins = [];
+    return {
+      learned: p.learned || {}, correct: p.correct || {},
+      today: p.today, checkins: p.checkins, session: p.session || null,
+    };
   } catch {
     return empty;
   }
@@ -101,12 +112,20 @@ function saveProgress() {
 
 let progress = loadProgress();
 
+function ensureToday() {
+  if (!progress.today || progress.today.date !== todayStr()) {
+    progress.today = { date: todayStr(), learned: 0, correct: 0, sessions: 0 };
+    saveProgress();
+  }
+}
+
 function wordKey(w) { return `${w.course || ""}:${w.en}`; }
 function isLearned(w) { return !!progress.learned[wordKey(w)]; }
 function learnedCountOf(course) { return course.words.filter((w) => isLearned({ ...w, course: course.id })).length; }
 function totalLearned() { return ALL_WORDS.filter(isLearned).length; }
 
 function markLearned(w, wasCorrect) {
+  ensureToday();
   const key = wordKey(w);
   if (!progress.learned[key]) {
     progress.learned[key] = true;
@@ -117,6 +136,47 @@ function markLearned(w, wasCorrect) {
     progress.today.correct += 1;
   }
   saveProgress();
+}
+
+/* ================= 每日打卡 ================= */
+function isCheckedInToday() {
+  return progress.checkins.includes(todayStr());
+}
+
+function currentStreak() {
+  const set = new Set(progress.checkins);
+  const d = new Date();
+  if (!set.has(fmtDate(d))) d.setDate(d.getDate() - 1); // 今天还没打卡时，从昨天往前数
+  let streak = 0;
+  while (set.has(fmtDate(d))) {
+    streak += 1;
+    d.setDate(d.getDate() - 1);
+  }
+  return streak;
+}
+
+function doCheckIn() {
+  if (isCheckedInToday()) return;
+  ensureToday();
+  progress.checkins.push(todayStr());
+  if (progress.checkins.length > 60) progress.checkins = progress.checkins.slice(-60);
+  saveProgress();
+  celebrate();
+  renderHome();
+}
+
+/* 彩纸庆祝 */
+function celebrate() {
+  const emojis = ["🎉", "⭐", "🌸", "💚", "✨", "🐱"];
+  for (let i = 0; i < 24; i++) {
+    const piece = el("span", { class: "confetti-piece", "aria-hidden": "true" },
+      emojis[Math.floor(Math.random() * emojis.length)]);
+    piece.style.left = Math.random() * 100 + "vw";
+    piece.style.animationDelay = Math.random() * 0.4 + "s";
+    piece.style.fontSize = 14 + Math.random() * 16 + "px";
+    document.body.append(piece);
+    setTimeout(() => piece.remove(), 2200);
+  }
 }
 
 /* ================= 发音：优先语音合成，否则文本提示 ================= */
@@ -235,7 +295,17 @@ function courseCard(course, large) {
 }
 
 /* ================= 首页 ================= */
+function pickResumeCourse() {
+  const partial = COURSES.find((c) => {
+    const n = learnedCountOf(c);
+    return n > 0 && n < c.words.length;
+  });
+  if (partial) return partial;
+  return COURSES.find((c) => learnedCountOf(c) < c.words.length) || COURSES[0];
+}
+
 function renderHome() {
+  ensureToday();
   const learned = totalLearned();
   const pct = Math.round((learned / TOTAL_WORDS) * 100);
   document.getElementById("learned-count").textContent = String(learned);
@@ -244,8 +314,52 @@ function renderHome() {
   fill.style.width = pct + "%";
   document.getElementById("progress-bar-wrap").setAttribute("aria-valuenow", String(pct));
 
+  // 「开始/继续学习」按钮反映真实进度
+  const resume = pickResumeCourse();
+  const resumeLearned = learnedCountOf(resume);
+  const startBtn = document.getElementById("btn-start");
+  startBtn.textContent = "";
+  if (learned > 0) {
+    startBtn.append(`继续学习「${resume.zh}」 `,
+      el("span", { class: "btn-en" }, `Continue · ${resumeLearned}/${resume.words.length}`), " ▶");
+  } else {
+    startBtn.append("开始学习 ", el("span", { class: "btn-en" }, "Start"), " ▶");
+  }
+
+  // 每日打卡
+  const checked = isCheckedInToday();
+  document.getElementById("streak-count").textContent = String(currentStreak());
+  const dots = document.getElementById("week-dots");
+  dots.textContent = "";
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const ds = fmtDate(d);
+    const hit = progress.checkins.includes(ds);
+    dots.append(el("span", {
+      class: "week-dot" + (hit ? " on" : "") + (i === 0 ? " today" : ""),
+      role: "listitem",
+      title: ds,
+      "aria-label": `${ds} ${hit ? "已打卡" : "未打卡"}`,
+    }, hit ? "✓" : ""));
+  }
+  const checkinBtn = document.getElementById("btn-checkin");
+  checkinBtn.disabled = checked;
+  checkinBtn.classList.toggle("btn-done", checked);
+  checkinBtn.textContent = "";
+  if (checked) {
+    checkinBtn.append("✓ 今天已打卡 ", el("span", { class: "btn-en" }, "Checked in"));
+  } else {
+    checkinBtn.append("打卡 ", el("span", { class: "btn-en" }, "Check in"), " ✅");
+  }
+  document.getElementById("checkin-note").textContent = checked
+    ? "今天也坚持学习啦，真棒！Great job today!"
+    : "每天来学一点点，点亮你的打卡记录吧！Tap to check in!";
+
+  // 今日任务（含打卡任务），完成自动点亮
   const t = progress.today;
   const tasks = [
+    { zh: "完成今日打卡", en: "Check in today", cur: checked ? 1 : 0, goal: 1, icon: "🔥" },
     { zh: "学 5 个单词", en: "Learn 5 words", cur: Math.min(t.learned, 5), goal: 5, icon: "📖" },
     { zh: "完成 1 次练习", en: "Finish 1 practice", cur: Math.min(t.sessions, 1), goal: 1, icon: "🎯" },
     { zh: "答对 8 题", en: "Answer 8 correctly", cur: Math.min(t.correct, 8), goal: 8, icon: "🌟" },
@@ -268,9 +382,9 @@ function renderHome() {
 }
 
 document.getElementById("btn-start").addEventListener("click", () => {
-  const next = COURSES.find((c) => learnedCountOf(c) < c.words.length) || COURSES[0];
-  location.hash = `#/practice/${next.id}`;
+  location.hash = `#/practice/${pickResumeCourse().id}`;
 });
+document.getElementById("btn-checkin").addEventListener("click", doCheckIn);
 
 /* ================= 课程列表 / 练习选课程 ================= */
 function renderCourseList() {
@@ -282,6 +396,22 @@ function renderCourseList() {
 function renderPracticePick() {
   const grid = document.getElementById("practice-pick-grid");
   grid.textContent = "";
+  const s = progress.session;
+  if (s && !s.done && s.index < s.queue.length && COURSE_BY_ID[s.courseId]) {
+    const c = COURSE_BY_ID[s.courseId];
+    grid.append(
+      el("button", {
+        type: "button",
+        class: "course-card tint-gold resume-card",
+        "aria-label": `继续上次练习：${c.zh}，第 ${s.index + 1} 题`,
+        onclick: () => { location.hash = `#/practice/${c.id}`; },
+      },
+        el("span", { class: "c-emoji", "aria-hidden": "true" }, "⏳"),
+        el("span", { class: "c-zh" }, "继续上次练习"),
+        el("span", { class: "c-en" }, `Resume · ${c.zh} ${c.en}`),
+        el("span", { class: "c-meta" }, `停在第 ${s.index + 1} / ${s.queue.length} 题`))
+    );
+  }
   for (const c of COURSES) {
     grid.append(
       el("button", {
@@ -357,9 +487,31 @@ function buildSession(course) {
   return { course, queue: order, index: 0, correctCount: 0 };
 }
 
+function saveSession() {
+  progress.session = {
+    courseId: session.course.id,
+    queue: session.queue.map((w) => w.en),
+    index: session.index,
+    correct: session.correctCount,
+    done: !!session.done,
+  };
+  saveProgress();
+}
+
 function startPractice(course) {
+  ensureToday();
+  const saved = progress.session;
+  if (saved && saved.courseId === course.id && !saved.done && saved.index < saved.queue.length) {
+    const map = Object.fromEntries(course.words.map((w) => [w.en, { ...w, course: course.id }]));
+    const queue = saved.queue.map((en) => map[en]).filter(Boolean);
+    if (queue.length) {
+      session = { course, queue, index: saved.index, correctCount: saved.correct || 0 };
+      renderQuestion();
+      return;
+    }
+  }
   session = buildSession(course);
-  progress.today.date === todayStr() || (progress.today = { date: todayStr(), learned: 0, correct: 0, sessions: progress.today.sessions });
+  saveSession();
   renderQuestion();
 }
 
@@ -374,11 +526,10 @@ function renderQuestion() {
   const { course, queue, index } = session;
 
   if (index >= queue.length) {
-    progress.today.sessions += 1;
-    saveProgress();
     renderDone();
     return;
   }
+  saveSession();
 
   const word = queue[index];
   // 两种题型交替：看图选词 / 看词选图
@@ -517,7 +668,15 @@ function soundButtons(word) {
 function renderDone() {
   const sec = views.practice;
   sec.textContent = "";
+  ensureToday();
   const { course, queue, correctCount } = session;
+  if (!session.done) {
+    session.done = true;
+    progress.today.sessions += 1;
+    progress.session = null; // 本次练习已完成，清除断点
+    saveProgress();
+    celebrate();
+  }
   const total = queue.length;
   const ratio = total ? correctCount / total : 0;
   const stars = ratio >= 0.9 ? "⭐⭐⭐" : ratio >= 0.6 ? "⭐⭐" : "⭐";

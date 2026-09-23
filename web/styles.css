@@ -242,7 +242,7 @@ main {
 }
 
 /* ---------- 今日任务 ---------- */
-.task-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.task-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); }
 
 .task-item {
   display: flex;
@@ -486,6 +486,58 @@ main {
 .done-card h1 { font-size: 28px; margin: 12px 0 4px; }
 .done-card p { color: var(--brown-soft); margin: 0 0 24px; }
 .done-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+
+/* ---------- 每日打卡 ---------- */
+.panel-tasks { grid-column: 1 / -1; }
+
+.streak-line { margin: 6px 0 14px; color: var(--brown-soft); }
+.streak-line strong { font-size: 30px; color: var(--gold); }
+
+.week-dots { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+.week-dot {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--cream);
+  border: 3px solid var(--cream-deep);
+  color: var(--brown-soft);
+  font-weight: 800;
+  font-size: 15px;
+}
+.week-dot.on {
+  background: var(--teal-light);
+  border-color: var(--teal);
+  color: var(--teal-deep);
+}
+.week-dot.today { box-shadow: 0 0 0 3px var(--pink-light); }
+
+.btn:disabled { cursor: default; transform: none; }
+.btn-done {
+  background: var(--green-ok);
+  border-color: #256F45;
+  box-shadow: 0 4px 0 #256F45;
+  color: #fff;
+}
+.btn-done .btn-en { color: #DFF0E5; }
+
+.checkin-note { margin: 12px 0 0; font-size: 14px; color: var(--brown-soft); font-weight: 600; min-height: 22px; }
+
+/* ---------- 彩纸庆祝 ---------- */
+.confetti-piece {
+  position: fixed;
+  top: -30px;
+  z-index: 99;
+  pointer-events: none;
+  animation: confetti-fall 1.6s ease-in forwards;
+}
+@keyframes confetti-fall {
+  to { transform: translateY(105vh) rotate(360deg); opacity: 0.4; }
+}
+
+.resume-card { border-color: var(--gold); }
 
 /* ---------- 页脚 ---------- */
 .site-footer {

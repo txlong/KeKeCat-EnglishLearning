@@ -8,7 +8,10 @@
 
 ## 功能
 
-- **首页 Home**：可可猫吉祥物、词汇进度条、今日任务、四个主题课程入口
+- **首页 Home**：可可猫吉祥物、词汇进度条、每日打卡、今日任务、四个主题课程入口
+- **每日打卡 Check-in**：一键打卡记录当天学习，展示连续打卡天数与最近 7 天记录，打卡成功有彩纸庆祝
+- **今日任务 Tasks**：打卡、学单词、完成练习、答对题目四项任务，随真实学习行为自动点亮
+- **继续学习 Resume**：首页按钮自动定位到有进度的课程；练习中途退出后，可从上次答到的题目继续（断点续练）
 - **课程 Courses / 详情**：动物、颜色、食物、家人四个主题课程；详情页展示单元单词与「继续学习」入口
 - **单词练习 Practice**：单词插图、发音（浏览器语音合成，不可用时显示文本发音提示）、看图选词 / 听音选图两种选择题、正确/错误即时反馈，完成后获得星星评价并更新本机进度
 
@@ -43,7 +46,7 @@ python3 -m http.server 8080
 
 ## 部署（GitHub Pages）
 
-推送到 `main` 分支后，GitHub Actions（[`.github/workflows/deploy-pages.yml`](.github/workflows/deploy-pages.yml)）自动将 `web/` 目录发布到 GitHub Pages，也可在 Actions 页面手动触发（workflow_dispatch）。
+推送到 `main` 分支后，GitHub Actions（[`.github/workflows/jekyll-gh-pages.yml`](.github/workflows/jekyll-gh-pages.yml)）自动用 Jekyll 构建 `web/` 目录并发布到 GitHub Pages，也可在 Actions 页面手动触发（workflow_dispatch）。
 
 ## 许可
 

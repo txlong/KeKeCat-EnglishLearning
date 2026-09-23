@@ -44,7 +44,15 @@
           </div>
         </div>
 
-        <div class="panel card-soft" aria-labelledby="tasks-title">
+        <div class="panel card-soft" id="checkin-panel" aria-labelledby="checkin-title">
+          <h2 id="checkin-title">🔥 每日打卡 <span class="panel-en">Daily Check-in</span></h2>
+          <p class="streak-line">连续打卡 <strong id="streak-count">0</strong> 天 <span class="en-line">day streak</span></p>
+          <div class="week-dots" id="week-dots" role="list" aria-label="最近 7 天打卡记录"></div>
+          <button type="button" class="btn btn-primary btn-lg" id="btn-checkin">打卡 <span class="btn-en">Check in</span> ✅</button>
+          <p class="checkin-note" id="checkin-note" aria-live="polite"></p>
+        </div>
+
+        <div class="panel card-soft panel-tasks" aria-labelledby="tasks-title">
           <h2 id="tasks-title">⭐ 今日任务 <span class="panel-en">Today's Tasks</span></h2>
           <ul class="task-list" id="task-list"></ul>
         </div>
