@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>可可猫 KeKeCat · 儿童英语乐园</title>
+  <meta name="description" content="可可猫 KeKeCat：面向 5—10 岁儿童的英语学习演示网站，主题课程、单词练习与本机学习进度。">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐱</text></svg>">
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="#/home">
+        <span class="brand-emoji" aria-hidden="true">🐱</span>
+        <span class="brand-name">可可猫 <span class="brand-en">KeKeCat</span></span>
+      </a>
+      <nav class="main-nav" aria-label="主导航">
+        <a href="#/home" data-nav="home">首页<span class="nav-en">Home</span></a>
+        <a href="#/courses" data-nav="courses">课程<span class="nav-en">Courses</span></a>
+        <a href="#/practice" data-nav="practice">练习<span class="nav-en">Practice</span></a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <!-- 首页 Home -->
+    <section id="view-home" class="view" aria-labelledby="home-title">
+      <div class="hero card-soft">
+        <div class="hero-text">
+          <h1 id="home-title">你好！我是可可猫 <span class="hero-en">Hi! I'm KeKeCat</span></h1>
+          <p class="hero-sub">一起来学英语吧，每天进步一点点！<br><span class="en-line">Let's learn English together, one small step a day!</span></p>
+          <button type="button" class="btn btn-primary btn-lg" id="btn-start">开始学习 <span class="btn-en">Start</span> ▶</button>
+        </div>
+        <img class="hero-mascot" src="assets/kekecat-mascot.png" alt="可可猫吉祥物：一只戴围巾的橘棕色小猫在挥手" width="320" height="320">
+      </div>
+
+      <div class="home-grid">
+        <div class="panel card-soft" aria-labelledby="progress-title">
+          <h2 id="progress-title">📚 词汇进度 <span class="panel-en">Word Progress</span></h2>
+          <p class="progress-numbers"><strong id="learned-count">0</strong> / <span id="total-count">24</span> 个单词已学会 <span class="en-line">words learned</span></p>
+          <div class="progress-track" role="progressbar" aria-labelledby="progress-title" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progress-bar-wrap">
+            <div class="progress-fill" id="progress-fill"></div>
+          </div>
+        </div>
+
+        <div class="panel card-soft" aria-labelledby="tasks-title">
+          <h2 id="tasks-title">⭐ 今日任务 <span class="panel-en">Today's Tasks</span></h2>
+          <ul class="task-list" id="task-list"></ul>
+        </div>
+      </div>
+
+      <h2 class="section-title">🎈 主题课程 <span class="panel-en">Courses</span></h2>
+      <div class="course-grid" id="course-grid"></div>
+    </section>
+
+    <!-- 课程列表 Courses -->
+    <section id="view-courses" class="view" hidden aria-labelledby="courses-title">
+      <h1 id="courses-title" class="section-title">🎈 选一个课程 <span class="panel-en">Pick a Course</span></h1>
+      <div class="course-grid course-grid-wide" id="course-grid-full"></div>
+    </section>
+
+    <!-- 课程详情 Course detail -->
+    <section id="view-course" class="view" hidden aria-labelledby="course-title"></section>
+
+    <!-- 单词练习 Practice -->
+    <section id="view-practice" class="view" hidden aria-labelledby="practice-title"></section>
+
+    <!-- 练习选课程 Practice course picker -->
+    <section id="view-practice-pick" class="view" hidden aria-labelledby="practice-pick-title">
+      <h1 id="practice-pick-title" class="section-title">🎯 选一个课程来练习 <span class="panel-en">Choose a course to practice</span></h1>
+      <div class="course-grid course-grid-wide" id="practice-pick-grid"></div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>🐱 可可猫 KeKeCat · 演示内容 Demo site — 课程与数据均为演示示例。</p>
+    <p>学习进度只保存在本机浏览器，不收集任何个人信息。<span class="en-line">Progress stays on this device. No personal info is collected.</span></p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
